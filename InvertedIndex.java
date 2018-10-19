@@ -1,29 +1,19 @@
-import java.awt.List;
 import java.io.BufferedReader;
-import java.io.File;
-//import java.io.FileInputStream;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.nio.file.Paths;
-//import java.nio.charset.StandardCharsets;
-//import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
-//import org.apache.commons.io.FilenameUtils;
-//import org.apache.commons.io;
-
-
-
-//import javax.imageio.stream.FileImageInputStream;
-
 import java.util.Iterator;
-//import javax.swing.text.html.HTMLDocument.Iterator;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.StringTokenizer;
-
-//import javax.swing.text.html.HTMLDocument.Iterator;
 
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.index.Fields;
@@ -39,25 +29,42 @@ import org.apache.lucene.util.BytesRef;
 
 public class InvertedIndex {
 	
+	//Global varibales
 	static HashMap<String, LinkedList<Integer>> hashMap = new HashMap<String, LinkedList<Integer>>();
 	static boolean flag = false;
+	static BufferedWriter bufferWriter;
 	
 	
+	//--------------------------------------------------------------main function------------------------------------------------//
 	public static void main(String[] args) throws IOException{
 		
-		InvertedIndex obj = new InvertedIndex();
-		//HashMap<String, LinkedList<Integer>> hashMap = new HashMap<String, LinkedList<Integer>>();
-		hashMap = inverted();
-		userQuery();
-		//getPostingsList(hashMap);
-	}
-		private static HashMap<String, LinkedList<Integer>> inverted() throws IOException{
+		String start1 = args[0];
+		String fileOutput = args[1];
+		String fileInput = args[2];
 		
-		Directory directory = FSDirectory.open(Paths.get("C:\\index\\index"));
+		//opening the output file
+		bufferWriter = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(fileOutput), "UTF-8"));
+		//InvertedIndex obj = new InvertedIndex();
+		hashMap = inverted(start1);// creating inverted index
+		userQuery(fileInput);//passing user query
+		bufferWriter.close(); // closing the ouput file
+	}
+	
+	
+	
+	
+	
+	
+	//--------------------------------------------------------------creating inverted index------------------------------------------------//
+	
+	private static HashMap<String, LinkedList<Integer>> inverted(String start1) throws IOException{
+    
+		//changes
+		Path path = Paths.get(start1);
+		Directory directory = FSDirectory.open(path);
 		IndexReader reader = DirectoryReader.open(directory);
 		Fields fields = MultiFields.getFields(reader);
 		Iterator<String> iterator = fields.iterator(); //iterator for fieldstext_en, text_hi.... 
-//		HashMap<String, LinkedList<Integer>> hashmap = new HashMap<String, LinkedList<Integer>>();
 		HashMap<String, LinkedList<Integer>> hashmap = new HashMap<String, LinkedList<Integer>>();
 		String textfield;
 		Terms terms;
@@ -97,126 +104,89 @@ public class InvertedIndex {
 					hashmap.put(termstring.utf8ToString(), linkedlist);
 				}//go to next term
 		   }//go to next field
-			//System.out.println(hashmap.size());
-	}//inverted index is completed
+			
+	     }//end while
 		
 		
-		//printing the inverted index
-//		for(Map.Entry<String, LinkedList<Integer>> entry : hashmap.entrySet()) {
-//    		System.out.print(entry.getKey() + "(" + entry.getValue().size() + ") : "  );
-//    		
-//    		Iterator<Integer> iterator2 = entry.getValue().iterator();
-//    		while(iterator2.hasNext()) {
-//    			System.out.print(iterator2.next() + " -> ");
-//    		}
-//    		System.out.println("END");
-//    	}
-//		
+		/*
+		//--------------------------------------------------------------printing the inverted index------------------------------------------------//
+		for(Map.Entry<String, LinkedList<Integer>> entry : hashmap.entrySet()) {
+    		System.out.print(entry.getKey() + "(" + entry.getValue().size() + ") : "  );
+    		
+    		Iterator<Integer> iterator2 = entry.getValue().iterator();
+    		while(iterator2.hasNext()) {
+    			System.out.print(iterator2.next() + " -> ");
+    		}
+    		System.out.println("END");
+    	}
 		
-		//System.out.println("");
-		//print size of dictionary
+		//		print size of dictionary
 		System.out.println("There are " + hashmap.size()+ " terms in the dictionary");
 		
-		return hashmap;
-		}	
+		*/
 		
-	public static void userQuery() throws IOException{	
-		System.out.println("Please Enter the query: ");
-		//BufferedReader inputread = new BufferedReader(new InputStreamReader(new FileInputStream("C:\\Users\\Vallabh\\Desktop\\IRProj2\\input.txt")));
-		//new InputStreamReader(new FileInputStream("C:\\Users\\Vallabh\\Desktop\\IRProj2\\input.txt"))
-		//BufferedReader inputread = new BufferedReader(new InputStreamReader(new FileInputStream("C:\\Users\\Vallabh\\Desktop\\IRProj2\\input.txt")),StandardCharsets.UTF_8);
-		//BufferedReader inputread = new BufferedReader(new InputStreamReader(new FileInputStream("C:\\Users\\Vallabh\\Desktop\\IRProj2\\input.txt")));
-//		Path path = Paths.get("C:\\Users\\Vallabh\\Desktop\\IRProj2\\input.txt");
-//		String query;
-//		try (BufferedReader inputread = Files.newBufferedReader(path, StandardCharsets.UTF_8)){
-//			query = inputread.readLine();//this will store the query from user
-//		}
-//		System.out.println(query);
-//		
-//		File file = new File("/commons/io/project.properties");
-//		List lines = FileUtils.readLines(file, "UTF-8");
-		BufferedReader inputread1 = new BufferedReader(new InputStreamReader(System.in));
-		String query;
-		query=inputread1.readLine();
-		String querytempvariable = query;
-		String[] arrOfStr = querytempvariable.split(" ");
+	    return hashmap;
+    }//end   inverted index function 
 		
-		//to check whether each query term is valid or not		
-		for(int len = 0; len < arrOfStr.length; len++) {
-			if(hashMap.containsKey(arrOfStr[len])) {
-				//System.out.println("Query not found!");
-				continue;
-			}
-			else {
-				flag = true;
-				break;
-			}
+	
+		
+	//--------------------------------------------------------------userQuery(String fileInput)------------------------------------------------//	
+	
+		
+	public static void userQuery(String fileInput) throws IOException{
+		
+		BufferedReader inputread1 = new BufferedReader(new InputStreamReader(new FileInputStream(fileInput),StandardCharsets.UTF_8));
+		StringBuilder stringbuilder = new StringBuilder();
+		String line =null;
+		
+		//processing query from user and printing postings list for each term
+		try {
+			while((line=inputread1.readLine()) != null) {
+				stringbuilder.append(line);
+				String query = stringbuilder.toString();
+				String querytempvariable = query;
+				String[] arrOfStr = querytempvariable.split(" ");
 				
-		}
-		
-		//if query is valid
-		if(!flag) {
+				//calling getpostingsList
+				for(int len = 0; len < arrOfStr.length; len++) {
+						getPostingsList(arrOfStr[len],len);
+				}
 			
-			for(int len = 0; len < arrOfStr.length; len++) {
-				getPostingsList(arrOfStr[len],len);
-			}
-		
-		System.out.println();
-		
-		System.out.println("Please select which query strategy u want to use: ");
-		System.out.println("Select 1 for TaatAnd");
-		System.out.println("Select 2 for TaatOr");
-		System.out.println("Select 3 for DaatAnd");
-		System.out.println("Select 4 for DaatOr");
-		System.out.println();
-		BufferedReader inputread = new BufferedReader(new InputStreamReader(System.in));
-		String strategyOption = inputread.readLine();
-		
-		if(strategyOption.equals("1")) {
-			//System.out.println("Hello");
-			//System.out.println();
-			TaatAnd(query);
+				//searching strategies
+				TaatAnd(query);
+				TaatOr(query);	
+			
+				stringbuilder.delete(0, line.length());
+			}//end while
+		}finally {
+					inputread1.close();
 		}
-		else if(strategyOption.equalsIgnoreCase("2")) {
-		TaatOr(query);
+	}//end userQuery
+	
+	
+	
+	//--------------------------------------------------------------get Postings List------------------------------------------------//
+	
+	static void getPostingsList(String term, int len) throws IOException {
+		bufferWriter.write("GetPostings\n");
+		bufferWriter.write(term + " " +"\n");
+		bufferWriter.write("Postings list: " + hashMap.get(term).toString().replaceAll("\\[|\\]|,","") + "\n");
 	}
-//	else if(strategyOption.equalsIgnoreCase("3")) {
-//		DaatAnd(query);
-//	}
-//	else if(strategyOption.equalsIgnoreCase("1")) {
-//		DaatOr(query);
-//	}		
-	}
-		else
-			System.out.println("query is not valid!");
-
+	
 		
-	}
+	//--------------------------------------------------------------TaatAnd  Query------------------------------------------------//
 	
-	static void getPostingsList(String term, int len) {
-		System.out.println("GetPostings");
-		System.out.println("term"+len);
-		System.out.println("Postings list: " + hashMap.get(term).toString().replace("[", "").replace(",", " ").replace("]", ""));
-//		return hashMap.get(term);
-	}
-	
-	
-	 //TAATAnd query
 	 static void TaatAnd(String query) throws IOException {
-		 LinkedList<Integer> templist = new LinkedList<Integer>();
+		 
 		 int comparison = 0;
-		 
-		 
 		 String querytempvariable = query;
 		 String[] arrOfStr = querytempvariable.split(" ");// array of query terms
 		 int querytermsNo = arrOfStr.length;//no of query terms
-		 //LinkedList[] postingslist = new LinkedList[termsNo];
-		 LinkedList postingslist = new LinkedList();
+		 LinkedList<Integer> postingslist = new LinkedList<Integer>();
 		 ArrayList[] arrayvar = new ArrayList[querytermsNo];
 		 
 		 //create postings array for each term
 		 for(int len = 0; len < querytermsNo; len++) {
-			 //postingslist[len] = hashMap.get(arrOfStr[len]);
 			 postingslist = hashMap.get(arrOfStr[len]);
 			 Iterator<Integer> itr = postingslist.iterator();
 			 arrayvar[len] = new ArrayList<Integer>();
@@ -228,114 +198,93 @@ public class InvertedIndex {
 			}//end for
 		 }//end for
 		 
-		 
-		 //print each array of each query term
-//		 for(int len = 0; len < querytermsNo; len++) {
-//			 System.out.print("term" + len + " ");
-//			 for(int i=0;i<postingslist.size();i++) {
-//				 System.out.println("Size of postings list is " + postingslist.size());
-//				 System.out.print(arrayvar[len].get(i)+" ");
-//			 }//end for
-//			 System.out.println();
-//		 }//end for
-		 System.out.println();
-		 
+		  
 		 //TaatAnd Algorithm
-		ArrayList<Integer> answer = new ArrayList<Integer>();
-		ArrayList<Integer> smallestArray = null;
-		ArrayList<Integer> iterableArray = null;
-		int length = DocIdSetIterator.NO_MORE_DOCS;//setting length to a very high value
+		 ArrayList<Integer> answer = new ArrayList<Integer>();
+		 ArrayList<Integer> smallestArray = null;
+		 ArrayList<Integer> iterableArray = null;
+		 int length = DocIdSetIterator.NO_MORE_DOCS;//setting length to a very high value
 		
-		//find which array is smallest
-//		for(int i=0; i<querytermsNo; i++) {
-//			if(arrayvar[i].size() < length) {
-//				smallestArray = arrayvar[i];
-//				length = smallestArray.size();
-//			}
-//		}
+		 for(int i=0; i<querytermsNo-1; i++) {
+			 for(int j=i+1; j<querytermsNo; j++) {
+				 if(arrayvar[i].size() > arrayvar[j].size()) {
+					 iterableArray = arrayvar[i];
+					 arrayvar[i] = arrayvar[j];
+					 arrayvar[j] = iterableArray;
+			     }
+			 }
+		  }
 		
+		  smallestArray = arrayvar[0];
+		  iterableArray = smallestArray;
 		
-		for(int i=0; i<querytermsNo-1; i++) {
-			for(int j=i+1; j<querytermsNo; j++) {
-				if(arrayvar[i].size() > arrayvar[j].size()) {
-					iterableArray = arrayvar[i];
-					arrayvar[i] = arrayvar[j];
-					arrayvar[j] = iterableArray;
-			}
-			}
-		}
-		
-		
-		smallestArray = arrayvar[0];
-		iterableArray = smallestArray;
-		
-		for(int i=0; i<querytermsNo; i++) {
-			if(querytermsNo == 1)
-				answer = arrayvar[i];
-			else if(smallestArray.equals(arrayvar[i]))
-				continue;
-			else {
-				Iterator p1 = iterableArray.iterator();
-				Iterator p2 = arrayvar[i].iterator();
-				int value1 = (int) p1.next();
-				int value2 = (int) p2.next();
+		  for(int i=0; i<querytermsNo; i++) {
+			  if(querytermsNo == 1)
+				  answer = arrayvar[i];
+			  else if(smallestArray.equals(arrayvar[i]))
+				  continue;
+			  else {
+				  Iterator<Integer> p1 = iterableArray.iterator();
+				  Iterator p2 = arrayvar[i].iterator();
+				  int value1 = (int) p1.next();
+				  int value2 = (int) p2.next();
 				
-				while(!(p1.equals(null)) || !(p2.equals(null))) {
-					if(value1 == value2) {
-						comparison++;
-						if(!(answer.contains(value1)))
-							answer.add(value1);
-						if(!(p1.hasNext()))
-							break; //p1 = null;
-						else
-							value1 = (int) p1.next();
-						if(!(p2.hasNext()))
-							break; //p2 = null;
-						else
-							value2 = (int) p2.next();
-					}
-					else if(value1 < value2){
-						comparison += 1;
-						if(!(p1.hasNext()))
-							break; //p1 = null;
-						else
-							value1 = (int) p1.next();
-					}
-					else {
-						comparison += 1;
-						if(!(p2.hasNext()))
-							break;
-						else
-							value2 = (int) p2.next();
-							
-					}					
-				}//end while
-			}//end else
-			iterableArray = answer;
-			if(answer.isEmpty())
-				break;
-				
-		}//end for
+				  while(!(p1.equals(null)) || !(p2.equals(null))) {
+					  if(value1 == value2) {
+						  comparison++;
+						  if(!(answer.contains(value1)))
+							  answer.add(value1);
+						  if(!(p1.hasNext()))
+							  break; //p1 = null;
+						  else
+							  value1 = (int) p1.next();
+						  if(!(p2.hasNext()))
+							  break; //p2 = null;
+						  else
+							  value2 = (int) p2.next();
+					  }
+					  else if(value1 < value2){
+						  comparison += 1;
+						  if(!(p1.hasNext()))
+							  break; //p1 = null;
+						  else
+							  value1 = (int) p1.next();
+					  }
+					  else {
+						  comparison += 1;
+						  if(!(p2.hasNext()))
+							  break;
+						  else
+							  value2 = (int) p2.next();	
+					  }					
+				  }//end while
+			  }//end else
+			  iterableArray = answer;
+			  if(answer.isEmpty())
+				  break;
+		  }//end for
 		
 		
-		//Result Printing
-		System.out.println("TaatAnd");
-		for(int i=0; i<querytermsNo; i++) {
-			System.out.print(arrOfStr[i] + " ");
-		}
-		System.out.println();
-		if(answer.isEmpty())
-			System.out.println("Results: empty");
-		else {
-			System.out.print("Results: ");
-			System.out.println(answer.toString().replace("[", "").replace(",", " ").replace("]", ""));
-		}
-		System.out.println("Number of documents in results: " + answer.size());
-		System.out.println("Number of comparisons: " + comparison);
-	}//End TaatEnd
+		  //Result Printing
+		  bufferWriter.write("TaatAnd\n");
+		  for(int i=0; i<querytermsNo; i++) {
+			  bufferWriter.write(arrOfStr[i] + " ");
+		  }
+		  bufferWriter.write("\n");
+		  if(answer.isEmpty())
+			  bufferWriter.write("Results: empty\n");
+		  else {
+			  bufferWriter.write("Results: ");
+			  bufferWriter.write(answer.toString().replace("[", "").replace(",", " ").replace("]", "") + "\n");
+		  }
+		  bufferWriter.write("Number of documents in results: " + answer.size() + "\n");
+		  bufferWriter.write("Number of comparisons: " + comparison + "\n");
+	  }//End TaatEnd
 	
 	 
-	 //TaatOr
+	//--------------------------------------------------------------TaatOr  Query------------------------------------------------//
+	 
+	 
 	 static void TaatOr(String query) throws IOException{
 		 LinkedList<Integer> answer = new LinkedList<Integer>();//this will store final result
 		 LinkedList<Integer> term1Postings = new LinkedList<Integer>();
@@ -343,31 +292,29 @@ public class InvertedIndex {
 		 LinkedList<String> queryterms = new LinkedList<String>();// this stores different query terms
 		 StringTokenizer tokenizer = new StringTokenizer(query);
 		 int comparisons = 0;
-		 //String[] qt = query.split(" ")
-		 
+		 		 
 		 while(tokenizer.hasMoreTokens()) {
 			 queryterms.add(tokenizer.nextToken());
 		 }
-		 //System.out.println(queryterms);
-		 //Collections.sort(queryterms);
 		 
-		 Iterator queryIterator1 = queryterms.iterator();
-		 Iterator queryIterator2 = queryterms.iterator();
-		 
-		 Iterator posting1Iterator;
-		 Iterator posting2Iterator;
+		 Iterator<String> queryIterator1 = queryterms.iterator();
+		 Iterator<String> queryIterator2 = queryterms.iterator();
+		 Iterator<Integer> posting1Iterator;
+		 Iterator<Integer> posting2Iterator;
 		 
 		 int docId1=-1;
 		 int docId2=-1;
-		 String firstQueryTerm = (String) queryIterator1.next();
+		 
+		 String firstQueryTerm = queryIterator1.next();
 		 term1Postings = hashMap.get(firstQueryTerm);
 		 queryIterator2.next();
+		 
 		 if(queryIterator2.hasNext()) {
-			 String secondQueryTerm = (String) queryIterator2.next();
+			 String secondQueryTerm = queryIterator2.next();
 		 	 term2Postings = hashMap.get(secondQueryTerm);
 		 }
-		 //loops for all terms in a query
 		 
+		 //loops for all terms in a query
 		 if(queryterms.isEmpty()) {
 			 answer=null;
 		 }
@@ -380,22 +327,17 @@ public class InvertedIndex {
 				 docId1 = (int) posting1Iterator.next();
 				 docId2 = (int) posting2Iterator.next();
 				 while(!posting1Iterator.equals(null) && !posting2Iterator.equals(null)) {
-					 
-					
-					if(docId1 == docId2) {
+					 if(docId1 == docId2) {
 						comparisons++;
-						System.out.println("ram");
 						answer.add(docId1);
 						if(!answer.contains(docId1))
 							answer.add(docId1);
 						if(posting1Iterator.hasNext())
 							docId1 = (int) posting1Iterator.next();
-//						
 						if(posting2Iterator.hasNext())
 							docId2 = (int) posting2Iterator.next();
 						if(!posting1Iterator.hasNext() || !posting2Iterator.hasNext())
-							break;
-//						
+							break;	
 					}
 					else if(docId1 < docId2) {
 						comparisons++;
@@ -447,42 +389,30 @@ public class InvertedIndex {
 					 }
 				 }
 				 
-
 			term1Postings = answer;
 			if(queryIterator2.hasNext())
-				term2Postings = hashMap.get((String) queryIterator2.next());
+				term2Postings = hashMap.get(queryIterator2.next());
 			else
 				break;
-			
-			
-			
-			
 		 }//end while
-    }//end else
+      }//end else
 		 
 		 
 		 //Result Printing
-		 System.out.println("TaatOr");
+		 bufferWriter.write("TaatOr\n");
 			for(int i=0; i<queryterms.size(); i++) {
-				System.out.print(queryterms.get(i).toString().replace("[", "").replace(",", " ").replace("]", "") + " ");
+				bufferWriter.write(queryterms.get(i).toString().replace("[", "").replace(",", " ").replace("]", "") + " ");
 			}
-			System.out.println();
+			bufferWriter.write("\n");
 			if(answer.isEmpty())
-				System.out.println("Results: empty");
+				bufferWriter.write("Results: empty\n");
 			else {
-				System.out.print("Results: ");
-				System.out.println(answer.toString().replace("[", "").replace(",", " ").replace("]", ""));
+				bufferWriter.write("Results: ");
+				bufferWriter.write(answer.toString().replace("[", "").replace(",", " ").replace("]", "") + "\n");
 			}
-			System.out.println("Number of documents in results: " + answer.size());
-			System.out.println("Number of comparisons: " + comparisons);
-		 
-		 
-		 
-		 
-	 }
-	 
-	
-	 
-}//add invertedIndex class
+			bufferWriter.write("Number of documents in results: " + answer.size() + "\n");
+			bufferWriter.write("Number of comparisons: " + comparisons + "\n");	 
+	   } 
+    }//add invertedIndex class
 
 
